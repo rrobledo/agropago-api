@@ -1,0 +1,922 @@
+swagger: "2.0"
+info:
+  description: ""
+  version: "1.0.0"
+  title: "Agropago Rest API"
+  termsOfService: "http://www.agropago.com/terms/"
+  contact:
+    email: "support@agropago.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "api.agropago.com"
+basePath: "/"
+tags:
+- name: "identity"
+  description: "Authorization and User Management"
+- name: "agropago"
+  description: "Agropago Apis"
+- name: "admin"
+  description: "Admin Apis"
+schemes:
+- "https"
+- "http"
+paths:
+  /register:
+    post:
+      tags:
+      - "identity"
+      summary: "Register a new user on the system"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User"
+        required: true
+        schema:
+          $ref: "#/definitions/User"
+      responses:
+        405:
+          description: "Invalid input"
+  /activate:
+    post:
+      tags:
+      - "identity"
+      summary: "Activate a new user"
+      description: "In order to activate an user. First you need to receive a token by email and use it on the activation"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Activation"
+        required: true
+        schema:
+          $ref: "#/definitions/Activation"
+      responses:
+        405:
+          description: "Invalid input"
+  /login:
+    post:
+      tags:
+      - "identity"
+      summary: "User Login"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Activation"
+        required: true
+        schema:
+          $ref: "#/definitions/UserLogin"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "object"
+            properties:
+              auth_token:
+                type: "string"
+                example: "66ffd7f7c593afeb27e353769ffeac682bde3167"
+        405:
+          description: "Invalid input"
+
+  /logout:
+    post:
+      tags:
+      - "identity"
+      summary: "Logout"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /password:
+    post:
+      tags:
+      - "identity"
+      summary: "Change password"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            current_password:
+              type: "string"
+              example: "***********************"
+            new_password:
+              type: "string"
+              example: "***********************"
+            confirm_new_password:
+              type: "string"
+              example: "***********************"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /password/reset:
+    post:
+      tags:
+      - "identity"
+      summary: "Request Reset password"
+      description: "This api send an email containg a token and uid to reset the password."
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            email:
+              type: "string"
+              example: "juanperez@gmail.com"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /password/confirm:
+    post:
+      tags:
+      - "identity"
+      summary: "Confirm Reset password"
+      description: "Confirm reset password"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            ui:
+              type: "string"
+              example: "381209302i0i09i09u"
+            token:
+              type: "string"
+              example: "9809ads8908ds6jj8u2389"
+            new_password:
+              type: "string"
+              example: "***********************"
+            confirm_new_password:
+              type: "string"
+              example: "***********************"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /user:
+    get:
+      tags:
+      - "identity"
+      summary: "Get User Info"
+      description: "Get connected user info"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "No Content"
+          schema:
+            $ref: "#/definitions/UserInfo"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /email/change:
+    post:
+      tags:
+      - "identity"
+      summary: "Request email change by connected user, Consequently an email to confirm is sent"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            new_email:
+              type: "string"
+              example: "juanperez2@gmail.com"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /email/confirm:
+    post:
+      tags:
+      - "identity"
+      summary: "Confirm email change"
+      description: "Confirm email change"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            ui:
+              type: "string"
+              example: "381209302i0i09i09u"
+            token:
+              type: "string"
+              example: "9809ads8908ds6jj8u2389"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /contact-email:
+    post:
+      tags:
+      - "agropago"
+      summary: "Contact for supporting"
+      description: "Contact for supporting"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            from_email:
+              type: "string"
+              example: "juanperez@gmail.com"
+            contact_name:
+              type: "string"
+              example: "Juan Perez"
+            subject:
+              type: "string"
+              example: "No se me acredito pago 99323"
+            comments:
+              type: "string"
+              example: "Bla bla bla.."
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+
+  /bank/list:
+    get:
+      tags:
+      - "agropago"
+      summary: "Get bank list"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "array"
+            description: ""
+            items:
+              $ref: "#/definitions/Bank"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /credit-card/list:
+    get:
+      tags:
+      - "agropago"
+      summary: "Get credit card list"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "array"
+            description: ""
+            items:
+              $ref: "#/definitions/CreditCard"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /user-bank-account/create:
+    post:
+      tags:
+      - "agropago"
+      summary: "Create Bank Account"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/BankAccountCreate"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /user-bank-account/list:
+    get:
+      tags:
+      - "agropago"
+      summary: "Get Bank list"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "array"
+            description: ""
+            items:
+              $ref: "#/definitions/BankAccountList"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /user-bank-account/delete/{bankAccountId}:
+    delete:
+      tags:
+      - "agropago"
+      summary: "Delete Account Bank"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters: 
+        - name: "bankAccountId"
+          in: "path"
+          required: true
+          description: "Account ID"
+          type: "integer"
+      responses:
+          204:
+            description: "No Content"
+          405:
+            description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /payment-order/create:
+    post:
+      tags:
+      - "agropago"
+      summary: "Create a payment order"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/PaymentOrderCreate"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+  /payment-order/list:
+    get:
+      tags:
+      - "agropago"
+      summary: "Get payment orders"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "array"
+            description: ""
+            items:
+              $ref: "#/definitions/PaymentOrderList"
+      security:
+        - basicAuth: []
+
+  /payment-order/details/{paymentOrderUUID}:
+    get:
+      tags:
+      - "agropago"
+      summary: "Get Payment Order Details"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters: 
+        - name: "paymentOrderUUID"
+          in: "path"
+          required: true
+          description: "Payment Order ID"
+          type: "integer"
+      responses:
+        200:
+          description: ""
+          schema:
+            $ref: "#/definitions/PaymentOrderDetail"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+
+  /payment/create:
+    post:
+      tags:
+      - "agropago"
+      summary: "Create a payment"
+      description: ""
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/PaymentOrderCreate"
+      responses:
+        204:
+          description: "No Content"
+        405:
+          description: "Invalid input"
+      security:
+        - basicAuth: []
+
+
+securityDefinitions:
+  basicAuth:
+    type: basic
+
+definitions:
+  User:
+    type: "object"
+    properties:
+      first_name:
+        type: "string"
+        description: "Nombre"
+        example: "Juan"
+      last_name:
+        type: "string"
+        description: "Apellido"
+        example: "Perez"
+      birthdate:
+        type: "string"
+        description: "Fecha de nacimiento"
+        example: "01/08/1978"
+      dni:
+        type: "string"
+        description: "Dni"
+        example: "22222222"
+      legal_name:
+        type: "string"
+        description : "Nombre legal"
+        example: "Juan Perez"
+      cuit:
+        type: "string"
+        description: "Cuit"
+        example: "20222222223"
+      phone:
+        type: "string"
+        description: "Teléfono"
+        example: "0351-4895477"
+      email:
+        type: "string"
+        description: "Email"
+        example: "juanperez@gmail.com"
+      confirm_email:
+        type: "string"
+        description: "Confirm email"
+        example: "juanperez@gmail.com"
+      password:
+        type: "string"
+        description: "Password"
+        example: "**********"
+      terms_accepted:
+        type: "boolean"
+        description: "Terms accepted"
+        example: true
+
+  UserInfo:
+    type: "object"
+    properties:
+      first_name:
+        type: "string"
+        description: "Nombre"
+        example: "Juan"
+      last_name:
+        type: "string"
+        description: "Apellido"
+        example: "Perez"
+      birthdate:
+        type: "string"
+        description: "Fecha de nacimiento"
+        example: "01/08/1978"
+      dni:
+        type: "string"
+        description: "Dni"
+        example: "22222222"
+      legal_name:
+        type: "string"
+        description : "Nombre legal"
+        example: "Juan Perez"
+      cuit:
+        type: "string"
+        description: "Cuit"
+        example: "20222222223"
+      phone:
+        type: "string"
+        description: "Teléfono"
+        example: "0351-4895477"
+      balance:
+        type: "number"
+        description: "Balance"
+        example: "3000"
+      full_balance:
+        type: "number"
+        description: "Full Balance"
+        example: "3000"
+
+  Beneficiary:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        example: "juanperez@gmail.com"
+      first_name:
+        type: "string"
+        description: "Nombre"
+        example: "Juan"
+      last_name:
+        type: "string"
+        description: "Apellido"
+        example: "Perez"
+      legal_name:
+        type: "string"
+        description : "Nombre legal"
+        example: "Juan Perez"
+
+  Payer:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        example: "agropago.test01@gmail.com"
+      first_name:
+        type: "string"
+        description: "Nombre"
+        example: "Alberto"
+      last_name:
+        type: "string"
+        description: "Apellido"
+        example: "Perez"
+      legal_name:
+        type: "string"
+        description : "Nombre legal"
+        example: "Alberto Perez"
+
+  Activation:
+    type: "object"
+    properties:
+      uid:
+        type: "string"
+        description: "UID"
+        example: "834812341324123"
+      token:
+        type: "string"
+        description: "Token"
+        example: "2149230491391ofkfdkasdkadf43"
+
+  UserLogin:
+    type: "object"
+    properties:
+      email:
+        type: "string"
+        description: ""
+        example: "juanperez@gmail.com"
+      password:
+        type: "string"
+        description: ""
+        example: "******************"
+
+  Bank:
+    type: "object"
+    properties:
+      id:
+        type: "number"
+        description: "Id del Banco"
+        example: 16
+      name:
+        type: "string"
+        description: "Nombre del Banco"
+        example: "Banco Ciudad"
+      initials:
+        type: "string"
+        description: "Iniciales del Banco"
+        example: "CIUDAD"
+
+  CreditCard:
+    type: "object"
+    properties:
+      id:
+        type: "number"
+        description: "Id de la tarjeta"
+        example: 2
+      name:
+        type: "string"
+        description: "Nombre de la tarjeta"
+        example: "Galicia Rural"
+      interest:
+        type: "number"
+        description: "Interes"
+        example: 0.02
+
+  Status:
+    type: "object"
+    properties:
+      id:
+        type: "number"
+        description: "Id Status"
+        example: 2
+      name:
+        type: "string"
+        description: "Status Description"
+        example: "Transferido"
+
+  BankAccountCreate:
+    type: "object"
+    properties:
+      bank:
+        $ref: "#/definitions/Bank"
+      account_number:
+        type: "string"
+        description: "Cuenta Bancaria"
+        example: "0010500"
+      cbu:
+        type: "string"
+        description: "CBU"
+        example: "0170231820000000010500"
+      alias:
+        type: "string"
+        description: "Alias"
+        example: "Alias01"
+
+  BankAccountList:
+    type: "object"
+    properties:
+      bank:
+        $ref: "#/definitions/Bank"
+      account_number:
+        type: "string"
+        description: "Cuenta Bancaria"
+        example: "0010500"
+      cbu:
+        type: "string"
+        description: "CBU"
+        example: "0170231820000000010500"
+      alias:
+        type: "string"
+        description: "Alias"
+        example: "Alias01"
+      valid_account:
+        type: "boolean"
+        description: "Es valida"
+        example: true
+      when_valid_account:
+        type: "string"
+        description: "fecha validacion"
+        example: "2019-04-04T09:20:55.622478Z"
+
+  PaymentOrderCreate:
+    type: "object"
+    properties:
+      payer_email:
+        type: "string"
+        description: "Payer email"
+        example: "agropago.test02@gmail.com"
+      credit_card:
+        $ref: "#/definitions/CreditCard"
+      term:
+        type: "integer"
+        description: "Terminos"
+        example: "120"
+      amount:
+        type: "number"
+        description: "Total"
+        example: 100.00
+      amount_to_transfer:
+        type: "number"
+        description: "Total a tranferir"
+        example: 96.37
+      description:
+        type: "string"
+        description: "Descripcion"
+        example: "Cobro de algo"
+      invoice_number:
+        type: "string"
+        description: "Numero de Factura"
+        example: "234-234213"
+      feeds:
+        type: "object"
+        description: "Detalle comision"
+        example: 
+          earningRetetion: 0
+          proporcionalBankrate: 0
+          apCommissionTotal: 1
+          arancel: 0.02
+          ivaBankRateTotal: 0
+          ivaBankRate: 0.21
+          ivaArancelTotal: 0.42
+          ivaAPCommissionTotal: 0.21
+          ivaAPCommission: 0.21
+          proporcionalBankrateTotal: 0
+          earningRetetionTotal: 0
+          arancelTotal: 2
+          apCommission: 0.01
+          totalAmount: 96.37
+          cft: 0
+          ivaArancel: 0.21
+          IIBBRetention: 0
+          IIBBRetentionTotal: 0
+          
+  PaymentOrderList:
+    type: "object"
+    properties:
+      uuid:
+        type: "string"
+        description: "uuid"
+        example: "6a0e9a0a-c926-4805-8ae1-8242918a4c42"
+      code:
+        type: "string"
+        description: "code"
+        example: "PO-19-000005"
+      date:
+        type: "string"
+        example: "2019-04-16T17:20:08.767775Z"
+      beneficiary:
+        $ref: "#/definitions/Beneficiary"
+      payer_email:
+        type: "string"
+        description: "Payer email"
+        example: "agropago.test02@gmail.com"
+      payer:
+        $ref: "#/definitions/Payer"
+      credit_card:
+        $ref: "#/definitions/CreditCard"
+      term:
+        type: "integer"
+        description: "Terminos"
+        example: "120"
+      amount:
+        type: "number"
+        description: "Total"
+        example: 100.00
+      amount_to_transfer:
+        type: "number"
+        description: "Total a tranferir"
+        example: 96.37
+      status:
+        $ref: "#/definitions/Status"
+      description:
+        type: "string"
+        description: "Descripcion"
+        example: "Cobro de algo"
+      invoice_number:
+        type: "string"
+        description: "Numero de Factura"
+        example: "234-234213"
+      rel_type:
+        type: "string"
+        example: "beneficiary"
+      feeds:
+        type: "object"
+        description: "Detalle comision"
+        example: 
+          earningRetetion: 0
+          proporcionalBankrate: 0
+          apCommissionTotal: 1
+          arancel: 0.02
+          ivaBankRateTotal: 0
+          ivaBankRate: 0.21
+          ivaArancelTotal: 0.42
+          ivaAPCommissionTotal: 0.21
+          ivaAPCommission: 0.21
+          proporcionalBankrateTotal: 0
+          earningRetetionTotal: 0
+          arancelTotal: 2
+          apCommission: 0.01
+          totalAmount: 96.37
+          cft: 0
+          ivaArancel: 0.21
+          IIBBRetention: 0
+          IIBBRetentionTotal: 0
+        
+  PaymentOrderDetail:
+    type: "object"
+    properties:
+      code:
+        type: "string"
+        description: "code"
+        example: "PO-19-000005"
+      details:
+        type: "array"
+        items: 
+          type: "object"
+          properties:
+            date:
+              type: "string"
+              description: "fecha operacion"
+              example: "2019-04-16T19:04:03.792265Z"
+            amount:
+              type: "number"
+              description: "Monto"
+              example: 5000
+            details:
+              type: "string"
+              description: "Descripcion"
+              example: "Orden de pago creada."
+
+              
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
