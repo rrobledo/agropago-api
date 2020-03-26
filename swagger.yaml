@@ -1,922 +1,1500 @@
-swagger: "2.0"
+openapi: 3.0.1
 info:
-  description: ""
-  version: "1.0.0"
-  title: "Agropago Rest API"
-  termsOfService: "http://www.agropago.com/terms/"
+  title: Agropago Rest API
+  description: |
+    Este documento describe algunos casos de usos y en detalle las apis publicadas por el servicio de agropago.
+
+    # Integracion con servicios e-commerce
+    ## Paso 1) Registrar un nuevo usuario al sistema. 
+    
+    Ingrese al portal de agropago y registrarse como un nuevo usuario del sistema https://www.agropago.com/#/register
+
+    **Nota:** Despues de registrar el usuario y para continuar con este processo, Ud necesita generar un token para la cual exiten las siguientes alternativas:
+      1. Invocar la api de login. (Este token tiene un tiempo de expiracion)
+    ```
+    POST /login/ HTTP/1.1
+    Host: www.agropago.com
+    Content-Type: application/json
+    {
+       "email": "myapp.adm@gmail.com",
+       "password": "*************"
+    }
+    ```
+      2. Si ud necesita un token que no tenga periodo de expiracion, Por favor contactese con support@agropago.com y solicitelo.
+      
+    ## Paso 2) Listar los medios de pagos disponibles.
+    
+    Antes de registrar un cobro, Se sugiere listar todos los pagos disponibles y seleccionar uno de ellos. Tenga en cuenta que para realizar un cobro se solicitara la identificacion del medio de pago.
+
+    ```
+    POST /payment_methods/ HTTP/1.1
+    Host: www.agropago.com
+    Authorization: Bearer <ACCESS_TOKEN>
+    {
+      "count": 1,
+      "next": "",
+      "previous": "",
+      "result": [
+        {
+          "id": 1,
+          "name": "Bancor",
+          "assets": [
+            {
+              "id": 1,
+              "logo": "../assets/images/banks/bancor.png",
+              "cc_logo": "../assets/images/banks/bancor_card.png"
+            }
+          ],
+          "payment_type": "credit_card",
+          "operation_fee": 0.02,
+          "options": [
+            {
+              "mask": 1234,
+              "payment_method_id": 84,
+              "card_type": "agro",
+              "terms": [
+                {
+                  "term": 0,
+                  "term_labels": "Contado",
+                  "fee": 0,
+                  "fee_label": "Contado"
+                },
+                {
+                  "term": 60,
+                  "term_labels": "Hasta 60",
+                  "fee": 0.5,
+                  "fee_label": "50% Tasa TNA."
+                },
+                {
+                  "term": 120,
+                  "term_labels": "Hasta 120",
+                  "fee": 0.7,
+                  "fee_label": "70% Tasa TNA."
+                }
+              ],
+              "installments": [
+                {
+                  "installment": 0,
+                  "label": "Contado",
+                  "fee": 0,
+                  "fee_label": "Contado"
+                },
+                {
+                  "installment": 3,
+                  "label": "3 Cuotas",
+                  "fee": 0.5,
+                  "fee_label": "50% Tasa TNA."
+                },
+                {
+                  "installment": 6,
+                  "label": "6 Cuotas",
+                  "fee": 0.7,
+                  "fee_label": "70% Tasa TNA."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }    
+
+    ```
+
+      
+    **Nota:** Ud. puede usar esta informacion para generar un mejor experiencia del usuario. Este metodo retorna la siguiente informacion.
+    
+      1. Tipo de medio de pago. (Tarjeta de Credito, Debito, etc.)
+      2. Informacion de costo de la operacion.
+      3. Para el caso de tarjetas de credito Ud puede encontrar:
+          - Plazos y costo por cada uno de ello. (esto puede ser usado para ajustar el precio a cobrar)
+          - Cuotas y costo por cada una. (esto puede ser usado para ajustar el precio a cobrar)
+      
+
+    ## Paso 3) Cobro
+    
+      Usa la api payment para solicitar un pago. (Esta api requiere la siguiente informacion)
+      - Datos de la orden de pago
+      - email del usuario que esta comprando
+      - Datos de los items (Opcional)
+      - Datos del payment (Aca se envia la informacion de seleccionada en el paso anterior)
+         - Se usa la informacion ingresada por el cliente previamente validada con la informacion de validacion del medio de pago.
+    
+    ```
+    POST /transactions/payments/ HTTP/1.1
+    Host: www.agropago.com
+    Content-Type: application/json
+    {
+      "payment_order": {
+        "payer_email": "agropago.test02@gmail.com",
+        "amount": 100,
+        "description": "Venta de Quimicos",
+        "invoice_number": "234-234213",
+        "items": [
+          {
+            "item_id": 21212,
+            "description": "Kripton",
+            "amount": 5
+          }
+        ]
+      },
+      "amount": 100,
+      "payment_methods": [
+        {
+          "id": 2,
+          "options": {
+            "token": "9b5c42ea-9680-4f11-acd9-caa88ccfcb7e",
+            "amount": 100,
+            "term": 120,
+            "installments": 1,
+            "token_agro": "123123",
+            "token_type": "T",
+            "card_info": [
+              {
+                "name": "User Apidoc",
+                "bin": 448459,
+                "expiration_year": 25,
+                "expiration_month": 1,
+                "last_four_digits": 3090
+              }
+            ]
+          }
+        }
+      ]
+    }
+    ```
+
+    **Nota:** En el ejemplo anterior se realizo un cobro con tarjeta de credito. Para lo cual es importante tener en cuenta los siguientes datos.
+    
+      1. **payer_email**: El email del usuario al cual se le va a realizar el cobro. Es importante ya que este email es usado para enviarle la informacion del pago.
+      2. **items**: Este attributo es opcional. Se recomienda enviarlo ya que es usado en el email enviado al usuario.
+      3. **payment_methods.id**: Identificador(id) del medio de pago seleccionado,
+      5. **payment_methods.id.options.token**: El token generado usando la libreria(javascript) de agropago.
+      4. **payment_methods.id.options.term**: El plazo seleccionado,
+      5. **payment_methods.id.options.installments**: La cuotas seleccionadas,
+      
+      
+    ## Paso 4) Consulta de Cobros realizados
+       - Hay dos opciones para consultar los cobros realizados
+         - Usando la api rest, consultando por transacciones
+    	 - Ingresando a la pagina de agropago y viendo las transacciones.
+	 
+
+  termsOfService: http://www.agropago.com/terms/
   contact:
-    email: "support@agropago.com"
-  license:
-    name: "Apache 2.0"
-    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
-host: "api.agropago.com"
-basePath: "/"
+    email: support@agropago.com
+  version: 1.0.0
+servers:
+- url: https://api.sandbox.agropago.com/v1
+- url: http://apisandbox.agropago.com/v1
+
 tags:
-- name: "identity"
-  description: "Authorization and User Management"
-- name: "agropago"
-  description: "Agropago Apis"
-- name: "admin"
-  description: "Admin Apis"
-schemes:
-- "https"
-- "http"
+- name: Authorization
+  description: Administracion de Authenticacion y claves de usuarios
+- name: Users
+  description: Administracion de Usuarios 
+- name: Accounts
+  description: Administracion de Cuentas del usuario  
+- name: Payment Methods
+  description: Metodos de pagos disponibles 
+- name: Orders
+  description: Solicitudes de Pagos y Dinero  
+- name: Transactions
+  description: Payments and balance
+
 paths:
-  /register:
-    post:
-      tags:
-      - "identity"
-      summary: "Register a new user on the system"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "User"
-        required: true
-        schema:
-          $ref: "#/definitions/User"
-      responses:
-        405:
-          description: "Invalid input"
-  /activate:
-    post:
-      tags:
-      - "identity"
-      summary: "Activate a new user"
-      description: "In order to activate an user. First you need to receive a token by email and use it on the activation"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "Activation"
-        required: true
-        schema:
-          $ref: "#/definitions/Activation"
-      responses:
-        405:
-          description: "Invalid input"
   /login:
     post:
       tags:
-      - "identity"
-      summary: "User Login"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "Activation"
+      - Authorization
+      summary: User Login
+      requestBody:
+        description: Activation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
         required: true
-        schema:
-          $ref: "#/definitions/UserLogin"
       responses:
         200:
-          description: "successful operation"
-          schema:
-            type: "object"
-            properties:
-              auth_token:
-                type: "string"
-                example: "66ffd7f7c593afeb27e353769ffeac682bde3167"
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  auth_token:
+                    type: string
+                    example: 66ffd7f7c593afeb27e353769ffeac682bde3167
         405:
-          description: "Invalid input"
-
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
   /logout:
     post:
       tags:
-      - "identity"
-      summary: "Logout"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Authorization
+      summary: Logout
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
-
-  /password:
+          description: Invalid input
+          content: {}
+          
+  /users:
     post:
       tags:
-      - "identity"
-      summary: "Change password"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      - Users
+      summary: Registrar un nuevo usuario
+      requestBody:
+        description: User
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
         required: true
-        schema:
-          type: "object"
-          properties:
-            current_password:
-              type: "string"
-              example: "***********************"
-            new_password:
-              type: "string"
-              example: "***********************"
-            confirm_new_password:
-              type: "string"
-              example: "***********************"
       responses:
-        204:
-          description: "No Content"
         405:
-          description: "Invalid input"
-
-  /password/reset:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /users/activate:
     post:
       tags:
-      - "identity"
-      summary: "Request Reset password"
-      description: "This api send an email containg a token and uid to reset the password."
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      - Users
+      summary: Activar un usuario previamente registrado
+      description: Para activar un usuario se requiere un token recibido por email despues que el usuario fue registrado.
+      requestBody:
+        description: Activation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Activation'
         required: true
-        schema:
-          type: "object"
-          properties:
-            email:
-              type: "string"
-              example: "juanperez@gmail.com"
       responses:
-        204:
-          description: "No Content"
         405:
-          description: "Invalid input"
-
-  /password/confirm:
-    post:
-      tags:
-      - "identity"
-      summary: "Confirm Reset password"
-      description: "Confirm reset password"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        required: true
-        schema:
-          type: "object"
-          properties:
-            ui:
-              type: "string"
-              example: "381209302i0i09i09u"
-            token:
-              type: "string"
-              example: "9809ads8908ds6jj8u2389"
-            new_password:
-              type: "string"
-              example: "***********************"
-            confirm_new_password:
-              type: "string"
-              example: "***********************"
-      responses:
-        204:
-          description: "No Content"
-        405:
-          description: "Invalid input"
-
-  /user:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /users/profile:
     get:
       tags:
-      - "identity"
-      summary: "Get User Info"
-      description: "Get connected user info"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Users
+      summary: Obtener la informacion del usuario
+      description: Retorna la informacion del usuario conectado
       responses:
         200:
-          description: "No Content"
-          schema:
-            $ref: "#/definitions/UserInfo"
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfo'
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
       security:
-        - basicAuth: []
-
-  /email/change:
-    post:
+      - basicAuth: []
+  /users/password:
+    put:
       tags:
-      - "identity"
-      summary: "Request email change by connected user, Consequently an email to confirm is sent"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      - Users
+      summary: Cambiar password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_password:
+                  type: string
+                  example: '***********************'
+                new_password:
+                  type: string
+                  example: '***********************'
+                confirm_new_password:
+                  type: string
+                  example: '***********************'
         required: true
-        schema:
-          type: "object"
-          properties:
-            new_email:
-              type: "string"
-              example: "juanperez2@gmail.com"
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
-
-  /email/confirm:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /users/password/reset:
     post:
       tags:
-      - "identity"
-      summary: "Confirm email change"
-      description: "Confirm email change"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      - Users
+      summary: Solicitar blanqueo de password
+      description: Esta accion enviara un mail conteniendo un token and uid con el cual se puede cambiar el password.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: juanperez@gmail.com
         required: true
-        schema:
-          type: "object"
-          properties:
-            ui:
-              type: "string"
-              example: "381209302i0i09i09u"
-            token:
-              type: "string"
-              example: "9809ads8908ds6jj8u2389"
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
-
-  /contact-email:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /users/password/confirm:
     post:
       tags:
-      - "agropago"
-      summary: "Contact for supporting"
-      description: "Contact for supporting"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      - Users
+      summary: Confirmar blanqueo de password
+      description: Confirmar el blanqueo de password ingresando uno nuevo.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ui:
+                  type: string
+                  example: 381209302i0i09i09u
+                token:
+                  type: string
+                  example: 9809ads8908ds6jj8u2389
+                new_password:
+                  type: string
+                  example: '***********************'
+                confirm_new_password:
+                  type: string
+                  example: '***********************'
         required: true
-        schema:
-          type: "object"
-          properties:
-            from_email:
-              type: "string"
-              example: "juanperez@gmail.com"
-            contact_name:
-              type: "string"
-              example: "Juan Perez"
-            subject:
-              type: "string"
-              example: "No se me acredito pago 99323"
-            comments:
-              type: "string"
-              example: "Bla bla bla.."
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /users/email:
+    put:
+      tags:
+      - Users
+      summary: Solicita el cambio de email para el usuario conectado.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                new_email:
+                  type: string
+                  example: juanperez2@gmail.com
+        required: true
+      responses:
+        204:
+          description: No Content
+          content: {}
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+  /users/email/confirm:
+    post:
+      tags:
+      - Users
+      summary: Confirma el cambio de email.
+      description: Confirma el cambio de email.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ui:
+                  type: string
+                  example: 381209302i0i09i09u
+                token:
+                  type: string
+                  example: 9809ads8908ds6jj8u2389
+        required: true
+      responses:
+        204:
+          description: No Content
+          content: {}
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
 
-  /bank/list:
+  /banks:
     get:
       tags:
-      - "agropago"
-      summary: "Get bank list"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Accounts
+      summary: Retorna la lista de bancos disponibles
       responses:
         200:
           description: ""
-          schema:
-            type: "array"
-            description: ""
-            items:
-              $ref: "#/definitions/Bank"
+          content:
+            application/json:
+              schema:
+                type: array
+                description: ""
+                items:
+                  $ref: '#/components/schemas/Bank'
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
       security:
-        - basicAuth: []
-
-  /credit-card/list:
-    get:
-      tags:
-      - "agropago"
-      summary: "Get credit card list"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      responses:
-        200:
-          description: ""
-          schema:
-            type: "array"
-            description: ""
-            items:
-              $ref: "#/definitions/CreditCard"
-        405:
-          description: "Invalid input"
-      security:
-        - basicAuth: []
-
-  /user-bank-account/create:
+      - basicAuth: []
+      
+  /banks/accounts:
     post:
       tags:
-      - "agropago"
-      summary: "Create Bank Account"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
+      - Accounts
+      summary: Registra una nueva cuenta bancaria
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountCreate'
         required: true
-        schema:
-          $ref: "#/definitions/BankAccountCreate"
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
       security:
-        - basicAuth: []
-
-  /user-bank-account/list:
+      - basicAuth: []
+      x-codegen-request-body-name: body
     get:
       tags:
-      - "agropago"
-      summary: "Get Bank list"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Accounts
+      summary: Obtiene la lista de cuentas bancarias
       responses:
         200:
           description: ""
-          schema:
-            type: "array"
-            description: ""
-            items:
-              $ref: "#/definitions/BankAccountList"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  result:
+                    type: array
+                    description: ""
+                    items:
+                      $ref: '#/components/schemas/BankAccountView'
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
       security:
-        - basicAuth: []
-
-  /user-bank-account/delete/{bankAccountId}:
+      - basicAuth: []
+  /banks/accounts/{accountId}:
     delete:
       tags:
-      - "agropago"
-      summary: "Delete Account Bank"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters: 
-        - name: "bankAccountId"
-          in: "path"
-          required: true
-          description: "Account ID"
-          type: "integer"
-      responses:
-          204:
-            description: "No Content"
-          405:
-            description: "Invalid input"
-      security:
-        - basicAuth: []
-
-  /payment-order/create:
-    post:
-      tags:
-      - "agropago"
-      summary: "Create a payment order"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Accounts
+      summary: Elimina una cuenta bancaria
       parameters:
-      - in: "body"
-        name: "body"
+      - name: accountId
+        in: path
+        description: Account ID
         required: true
         schema:
-          $ref: "#/definitions/PaymentOrderCreate"
+          type: integer
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
       security:
-        - basicAuth: []
-
-  /payment-order/list:
+      - basicAuth: []
+      
+  /payment_methods:
     get:
       tags:
-      - "agropago"
-      summary: "Get payment orders"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Payment Methods
+      summary: Retorna la lista de todos los metodos de pagos disponibles
       responses:
         200:
           description: ""
-          schema:
-            type: "array"
-            description: ""
-            items:
-              $ref: "#/definitions/PaymentOrderList"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  result:
+                    type: array
+                    description: ""
+                    items:
+                      $ref: '#/components/schemas/PaymentMethod'
+        405:
+          description: Invalid input
+          content: {}
       security:
-        - basicAuth: []
-
-  /payment-order/details/{paymentOrderUUID}:
+      - basicAuth: []
+      
+  /orders/payment_orders:
+    post:
+      tags:
+      - Orders
+      summary: Crea una order de pago
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentOrderCreate'
+        required: true
+      responses:
+        204:
+          description: No Content
+          content: {}
+        405:
+          description: Invalid input
+          content: {}
+      security:
+      - basicAuth: []
+      x-codegen-request-body-name: body
     get:
       tags:
-      - "agropago"
-      summary: "Get Payment Order Details"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters: 
-        - name: "paymentOrderUUID"
-          in: "path"
-          required: true
-          description: "Payment Order ID"
-          type: "integer"
+      - Orders
+      summary: Lista las ordenes de pago realizadas y recibidas
       responses:
         200:
           description: ""
-          schema:
-            $ref: "#/definitions/PaymentOrderDetail"
-        405:
-          description: "Invalid input"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  result:
+                    type: array
+                    description: ""
+                    items:
+                      $ref: '#/components/schemas/PaymentOrderView'
       security:
-        - basicAuth: []
-
-
-  /payment/create:
+      - basicAuth: []
+  /orders/payment_orders/{po_id}/cancel:
     post:
       tags:
-      - "agropago"
-      summary: "Create a payment"
-      description: ""
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
+      - Orders
+      summary: Cancelar una orden de pago
+      description: Cancelar una orden de pago, Solo es posible cancelarla si no tiene ningun pago asociado.
       parameters:
-      - in: "body"
-        name: "body"
-        required: true
-        schema:
-          $ref: "#/definitions/PaymentOrderCreate"
+        - name: po_id
+          in: path
+          description: Payment Order id
+          required: true
+          schema:
+            type: integer
       responses:
         204:
-          description: "No Content"
+          description: No Content
+          content: {}
         405:
-          description: "Invalid input"
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
+
+  /transactions/payment_orders/{po_id}/payments:
+    post:
+      tags:
+      - Transactions
+      summary: Pago de una orden de pago realizada previamente.
+      parameters:
+        - name: po_id
+          in: path
+          description: Payment Order id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentReducedCreate'
+        required: true
+      responses:
+        204:
+          description: No Content
+          content: {}
+        405:
+          description: Invalid input
+          content: {}
+      x-codegen-request-body-name: body
       security:
-        - basicAuth: []
+      - basicAuth: []
+  /transactions/payments:
+    post:
+      tags:
+      - Transactions
+      summary: Pago sin orden de pago previa
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+        required: true
+      responses:
+        204:
+          description: No Content
+          content: {}
+        405:
+          description: Invalid input
+          content: {}
+      security:
+      - basicAuth: []
+      x-codegen-request-body-name: body
+    get:
+      tags:
+      - Transactions
+      summary: Lista los pagos realizados y solicitados
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  next:
+                    type: string
+                  previous:
+                    type: string
+                  result:
+                    type: array
+                    description: ""
+                    items:
+                      $ref: '#/components/schemas/PaymentView'
+      security:
+      - basicAuth: []
+  /transactions/payments/{payment_id}:
+    get:
+      tags:
+      - Transactions
+      summary: Lista los pagos realizados y solicitados
+      parameters:
+        - name: payment_id
+          in: path
+          description: Payment id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: ""
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentView'
+      security:
+      - basicAuth: []
 
 
-securityDefinitions:
-  basicAuth:
-    type: basic
-
-definitions:
-  User:
-    type: "object"
-    properties:
-      first_name:
-        type: "string"
-        description: "Nombre"
-        example: "Juan"
-      last_name:
-        type: "string"
-        description: "Apellido"
-        example: "Perez"
-      birthdate:
-        type: "string"
-        description: "Fecha de nacimiento"
-        example: "01/08/1978"
-      dni:
-        type: "string"
-        description: "Dni"
-        example: "22222222"
-      legal_name:
-        type: "string"
-        description : "Nombre legal"
-        example: "Juan Perez"
-      cuit:
-        type: "string"
-        description: "Cuit"
-        example: "20222222223"
-      phone:
-        type: "string"
-        description: "Teléfono"
-        example: "0351-4895477"
-      email:
-        type: "string"
-        description: "Email"
-        example: "juanperez@gmail.com"
-      confirm_email:
-        type: "string"
-        description: "Confirm email"
-        example: "juanperez@gmail.com"
-      password:
-        type: "string"
-        description: "Password"
-        example: "**********"
-      terms_accepted:
-        type: "boolean"
-        description: "Terms accepted"
-        example: true
-
-  UserInfo:
-    type: "object"
-    properties:
-      first_name:
-        type: "string"
-        description: "Nombre"
-        example: "Juan"
-      last_name:
-        type: "string"
-        description: "Apellido"
-        example: "Perez"
-      birthdate:
-        type: "string"
-        description: "Fecha de nacimiento"
-        example: "01/08/1978"
-      dni:
-        type: "string"
-        description: "Dni"
-        example: "22222222"
-      legal_name:
-        type: "string"
-        description : "Nombre legal"
-        example: "Juan Perez"
-      cuit:
-        type: "string"
-        description: "Cuit"
-        example: "20222222223"
-      phone:
-        type: "string"
-        description: "Teléfono"
-        example: "0351-4895477"
-      balance:
-        type: "number"
-        description: "Balance"
-        example: "3000"
-      full_balance:
-        type: "number"
-        description: "Full Balance"
-        example: "3000"
-
-  Beneficiary:
-    type: "object"
-    properties:
-      email:
-        type: "string"
-        example: "juanperez@gmail.com"
-      first_name:
-        type: "string"
-        description: "Nombre"
-        example: "Juan"
-      last_name:
-        type: "string"
-        description: "Apellido"
-        example: "Perez"
-      legal_name:
-        type: "string"
-        description : "Nombre legal"
-        example: "Juan Perez"
-
-  Payer:
-    type: "object"
-    properties:
-      email:
-        type: "string"
-        example: "agropago.test01@gmail.com"
-      first_name:
-        type: "string"
-        description: "Nombre"
-        example: "Alberto"
-      last_name:
-        type: "string"
-        description: "Apellido"
-        example: "Perez"
-      legal_name:
-        type: "string"
-        description : "Nombre legal"
-        example: "Alberto Perez"
-
-  Activation:
-    type: "object"
-    properties:
-      uid:
-        type: "string"
-        description: "UID"
-        example: "834812341324123"
-      token:
-        type: "string"
-        description: "Token"
-        example: "2149230491391ofkfdkasdkadf43"
-
-  UserLogin:
-    type: "object"
-    properties:
-      email:
-        type: "string"
-        description: ""
-        example: "juanperez@gmail.com"
-      password:
-        type: "string"
-        description: ""
-        example: "******************"
-
-  Bank:
-    type: "object"
-    properties:
-      id:
-        type: "number"
-        description: "Id del Banco"
-        example: 16
-      name:
-        type: "string"
-        description: "Nombre del Banco"
-        example: "Banco Ciudad"
-      initials:
-        type: "string"
-        description: "Iniciales del Banco"
-        example: "CIUDAD"
-
-  CreditCard:
-    type: "object"
-    properties:
-      id:
-        type: "number"
-        description: "Id de la tarjeta"
-        example: 2
-      name:
-        type: "string"
-        description: "Nombre de la tarjeta"
-        example: "Galicia Rural"
-      interest:
-        type: "number"
-        description: "Interes"
-        example: 0.02
-
-  Status:
-    type: "object"
-    properties:
-      id:
-        type: "number"
-        description: "Id Status"
-        example: 2
-      name:
-        type: "string"
-        description: "Status Description"
-        example: "Transferido"
-
-  BankAccountCreate:
-    type: "object"
-    properties:
-      bank:
-        $ref: "#/definitions/Bank"
-      account_number:
-        type: "string"
-        description: "Cuenta Bancaria"
-        example: "0010500"
-      cbu:
-        type: "string"
-        description: "CBU"
-        example: "0170231820000000010500"
-      alias:
-        type: "string"
-        description: "Alias"
-        example: "Alias01"
-
-  BankAccountList:
-    type: "object"
-    properties:
-      bank:
-        $ref: "#/definitions/Bank"
-      account_number:
-        type: "string"
-        description: "Cuenta Bancaria"
-        example: "0010500"
-      cbu:
-        type: "string"
-        description: "CBU"
-        example: "0170231820000000010500"
-      alias:
-        type: "string"
-        description: "Alias"
-        example: "Alias01"
-      valid_account:
-        type: "boolean"
-        description: "Es valida"
-        example: true
-      when_valid_account:
-        type: "string"
-        description: "fecha validacion"
-        example: "2019-04-04T09:20:55.622478Z"
-
-  PaymentOrderCreate:
-    type: "object"
-    properties:
-      payer_email:
-        type: "string"
-        description: "Payer email"
-        example: "agropago.test02@gmail.com"
-      credit_card:
-        $ref: "#/definitions/CreditCard"
-      term:
-        type: "integer"
-        description: "Terminos"
-        example: "120"
-      amount:
-        type: "number"
-        description: "Total"
-        example: 100.00
-      amount_to_transfer:
-        type: "number"
-        description: "Total a tranferir"
-        example: 96.37
-      description:
-        type: "string"
-        description: "Descripcion"
-        example: "Cobro de algo"
-      invoice_number:
-        type: "string"
-        description: "Numero de Factura"
-        example: "234-234213"
-      feeds:
-        type: "object"
-        description: "Detalle comision"
-        example: 
-          earningRetetion: 0
-          proporcionalBankrate: 0
-          apCommissionTotal: 1
-          arancel: 0.02
-          ivaBankRateTotal: 0
-          ivaBankRate: 0.21
-          ivaArancelTotal: 0.42
-          ivaAPCommissionTotal: 0.21
-          ivaAPCommission: 0.21
-          proporcionalBankrateTotal: 0
-          earningRetetionTotal: 0
-          arancelTotal: 2
-          apCommission: 0.01
-          totalAmount: 96.37
-          cft: 0
-          ivaArancel: 0.21
-          IIBBRetention: 0
-          IIBBRetentionTotal: 0
-          
-  PaymentOrderList:
-    type: "object"
-    properties:
-      uuid:
-        type: "string"
-        description: "uuid"
-        example: "6a0e9a0a-c926-4805-8ae1-8242918a4c42"
-      code:
-        type: "string"
-        description: "code"
-        example: "PO-19-000005"
-      date:
-        type: "string"
-        example: "2019-04-16T17:20:08.767775Z"
-      beneficiary:
-        $ref: "#/definitions/Beneficiary"
-      payer_email:
-        type: "string"
-        description: "Payer email"
-        example: "agropago.test02@gmail.com"
-      payer:
-        $ref: "#/definitions/Payer"
-      credit_card:
-        $ref: "#/definitions/CreditCard"
-      term:
-        type: "integer"
-        description: "Terminos"
-        example: "120"
-      amount:
-        type: "number"
-        description: "Total"
-        example: 100.00
-      amount_to_transfer:
-        type: "number"
-        description: "Total a tranferir"
-        example: 96.37
-      status:
-        $ref: "#/definitions/Status"
-      description:
-        type: "string"
-        description: "Descripcion"
-        example: "Cobro de algo"
-      invoice_number:
-        type: "string"
-        description: "Numero de Factura"
-        example: "234-234213"
-      rel_type:
-        type: "string"
-        example: "beneficiary"
-      feeds:
-        type: "object"
-        description: "Detalle comision"
-        example: 
-          earningRetetion: 0
-          proporcionalBankrate: 0
-          apCommissionTotal: 1
-          arancel: 0.02
-          ivaBankRateTotal: 0
-          ivaBankRate: 0.21
-          ivaArancelTotal: 0.42
-          ivaAPCommissionTotal: 0.21
-          ivaAPCommission: 0.21
-          proporcionalBankrateTotal: 0
-          earningRetetionTotal: 0
-          arancelTotal: 2
-          apCommission: 0.01
-          totalAmount: 96.37
-          cft: 0
-          ivaArancel: 0.21
-          IIBBRetention: 0
-          IIBBRetentionTotal: 0
-        
-  PaymentOrderDetail:
-    type: "object"
-    properties:
-      code:
-        type: "string"
-        description: "code"
-        example: "PO-19-000005"
-      details:
-        type: "array"
-        items: 
-          type: "object"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: Nombre
+          example: Juan
+        last_name:
+          type: string
+          description: Apellido
+          example: Perez
+        birthdate:
+          type: string
+          description: Fecha de nacimiento
+          example: 01/08/1978
+        dni:
+          type: string
+          description: Dni
+          example: "22222222"
+        legal_name:
+          type: string
+          description: Nombre legal
+          example: Juan Perez
+        cuit:
+          type: string
+          description: Cuit
+          example: "20222222223"
+        phone:
+          type: string
+          description: Teléfono
+          example: 0351-4895477
+        email:
+          type: string
+          description: Email
+          example: juanperez@gmail.com
+        confirm_email:
+          type: string
+          description: Confirm email
+          example: juanperez@gmail.com
+        password:
+          type: string
+          description: Password
+          example: '**********'
+        terms_accepted:
+          type: boolean
+          description: Terms accepted
+          example: true
+    UserInfo:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: Nombre
+          example: Juan
+        last_name:
+          type: string
+          description: Apellido
+          example: Perez
+        birthdate:
+          type: string
+          description: Fecha de nacimiento
+          example: 01/08/1978
+        dni:
+          type: string
+          description: Dni
+          example: "22222222"
+        legal_name:
+          type: string
+          description: Nombre legal
+          example: Juan Perez
+        cuit:
+          type: string
+          description: Cuit
+          example: "20222222223"
+        phone:
+          type: string
+          description: Teléfono
+          example: 0351-4895477
+        balance:
+          type: number
+          description: Balance
+          example: 3000.0
+        full_balance:
+          type: number
+          description: Full Balance
+          example: 3000.0
+    Beneficiary:
+      type: object
+      properties:
+        email:
+          type: string
+          example: juanperez@gmail.com
+        first_name:
+          type: string
+          description: Nombre
+          example: Juan
+        last_name:
+          type: string
+          description: Apellido
+          example: Perez
+        legal_name:
+          type: string
+          description: Nombre legal
+          example: Juan Perez
+    Payer:
+      type: object
+      properties:
+        email:
+          type: string
+          example: agropago.test01@gmail.com
+        first_name:
+          type: string
+          description: Nombre
+          example: Alberto
+        last_name:
+          type: string
+          description: Apellido
+          example: Perez
+        legal_name:
+          type: string
+          description: Nombre legal
+          example: Alberto Perez
+    Activation:
+      type: object
+      properties:
+        uid:
+          type: string
+          description: UID
+          example: "834812341324123"
+        token:
+          type: string
+          description: Token
+          example: 2149230491391ofkfdkasdkadf43
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+          description: ""
+          example: juanperez@gmail.com
+        password:
+          type: string
+          description: ""
+          example: '******************'
+    Bank:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Id del Banco
+          example: 16.0
+        name:
+          type: string
+          description: Nombre del Banco
+          example: Banco Ciudad
+        initials:
+          type: string
+          description: Iniciales del Banco
+          example: CIUDAD
+    PaymentMethod:
+      type: object
+      description: Metodo de pago.
+      required:
+      - id
+      - name
+      - payment_type
+      - rate_fee
+      - assets
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          description: Identificado de metodo de pago.
+          default: 0
+          example: 1
+        name:
+          type: string
+          description: Nombre/Descripcion del metodo de pago.
+          default: ''
+          example: Bancor
+        assets:
+          type: object
+          description: Imagenes/Iconos del metodo de pago.
+          default: {}
+          example:
+          - id: 1
+            logo: "../assets/images/banks/bancor.png"
+            cc_logo: "../assets/images/banks/bancor_card.png"
+          required:
+          - id
+          - logo
+          - cc_logo
           properties:
-            date:
-              type: "string"
-              description: "fecha operacion"
-              example: "2019-04-16T19:04:03.792265Z"
-            amount:
-              type: "number"
-              description: "Monto"
-              example: 5000
-            details:
-              type: "string"
-              description: "Descripcion"
-              example: "Orden de pago creada."
+            id:
+              type: integer
+              description: Identificador.
+              default: 0
+              example: 1
+            logo:
+              type: string
+              description: Imagen del metodo de pago.
+              default: ''
+              example: "../assets/images/banks/bancor.png"
+            cc_logo:
+              type: string
+              title: The Cc_logo Schema
+              description: Icono del metodo de pago.
+              default: ''
+              example: "../assets/images/banks/bancor_card.png"
+        payment_type:
+          type: string
+          description: Tipo de pago.
+          default: ''
+          example: credit_card
+        operation_fee:
+          type: number
+          description: Comision.
+          default: 0
+          example: 0.02
+        options:
+          type: object
+          description: Opciones del metodo de pago (Los atributos dependen del metodo de pago).
+          default: {}
+          example:
+          - mask: 1234
+            payment_method_id: 84
+            card_type: agro
+            terms:
+            - term: 0
+              term_labels: Contado
+              fee: 0
+              fee_label: Contado
+            - term: 60
+              term_labels: Hasta 60
+              fee: 0.5
+              fee_label: 50% Tasa TNA.
+            - term: 120
+              term_labels: Hasta 120
+              fee: 0.7
+              fee_label: 70% Tasa TNA.
+            installments:
+            - installment: 0
+              label: Contado
+              fee: 0
+              fee_label: Contado
+            - installment: 3
+              label: 3 Cuotas
+              fee: 0.5
+              fee_label: 50% Tasa TNA.
+            - installment: 6
+              label: 6 Cuotas
+              fee: 0.7
+              fee_label: 70% Tasa TNA.
+    Status:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Id Status
+          example: 2.0
+        name:
+          type: string
+          description: Status Description
+          example: Transferido
+    BankAccountCreate:
+      type: object
+      properties:
+        bank:
+          $ref: '#/components/schemas/Bank'
+        account_number:
+          type: string
+          description: Cuenta Bancaria
+        cbu:
+          type: string
+          description: CBU
+          example: "0170231820000000010500"
+        alias:
+          type: string
+          description: Alias
+          example: Alias01
+    BankAccountView:
+      type: object
+      properties:
+        bank:
+          $ref: '#/components/schemas/Bank'
+        account_number:
+          type: string
+          description: Cuenta Bancaria
+          example: "0010500"
+        cbu:
+          type: string
+          description: CBU
+          example: "0170231820000000010500"
+        alias:
+          type: string
+          description: Alias
+          example: Alias01
+        valid_account:
+          type: boolean
+          description: Es valida
+          example: true
+        when_valid_account:
+          type: string
+          description: fecha validacion
+          example: 2019-04-04T09:20:55.622478Z
+    PaymentOrderCreate:
+      type: object
+      properties:
+        payer_email:
+          type: string
+          description: Payer email
+          example: agropago.test02@gmail.com
+        amount:
+          type: number
+          description: Total
+          example: 100.00
+        description:
+          type: string
+          description: Descripcion
+          example: Venta de Quimicos
+        invoice_number:
+          type: string
+          description: Numero de Factura
+          example: 234-234213
+        payment_method_required:
+          type: object
+          properties:
+            id:
+              type: number
+              description: Payment method id (Define el metdio de pago seleccionado).
+              example: 2
+            options:
+              type: object
+              properties:
+                term:
+                  type: number
+                  description: Plazo de pago.
+                  example: 120
+                installments:
+                  type: number
+                  description: Cantidad de Cuotas.
+                  example: 1
+        items:
+          type: array
+          items:
+            type: object
+            example:
+              item_id: 21212
+              description: Kripton
+              amount: 5
+    PaymentOrderReducedCreate:
+      type: object
+      properties:
+        payer_email:
+          type: string
+          description: Payer email
+          example: agropago.test02@gmail.com
+        amount:
+          type: number
+          description: Total
+          example: 100.00
+        description:
+          type: string
+          description: Descripcion
+          example: Venta de Quimicos
+        invoice_number:
+          type: string
+          description: Numero de Factura
+          example: 234-234213
+        items:
+          type: array
+          items:
+            type: object
+            example:
+              item_id: 21212
+              description: Kripton
+              amount: 5
+    PaymentOrderView:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: uuid
+          example: 6a0e9a0a-c926-4805-8ae1-8242918a4c42
+        code:
+          type: string
+          description: code
+          example: PO-19-000005
+        date:
+          type: string
+          example: '2019-04-16T17:20:08.767775Z'
+        beneficiary:
+          $ref: '#/components/schemas/Beneficiary'
+        payer_email:
+          type: string
+          description: Payer email
+          example: agropago.test02@gmail.com
+        payer:
+          $ref: '#/components/schemas/Payer'
+        amount:
+          type: number
+          description: Total
+          example: 100.0
+        amount_to_transfer:
+          type: number
+          description: Total a tranferir
+          example: 96.37
+        status:
+          $ref: '#/components/schemas/Status'
+        description:
+          type: string
+          description: Descripcion
+          example: Venta de quimicos
+        invoice_number:
+          type: string
+          description: Numero de Factura
+          example: 234-234213
+        rel_type:
+          type: string
+          example: beneficiary
+        payment_method_required:
+          type: object
+          properties:
+            id:
+              type: number
+              description: Payment method id (Define el metdio de pago seleccionado).
+              example: 2
+            options:
+              type: object
+              properties:
+                term:
+                  type: number
+                  description: Plazo de pago.
+                  example: 120
+                installments:
+                  type: number
+                  description: Cantidad de Cuotas.
+                  example: 1
+        items:
+          type: array
+          items:
+            type: object
+            example:
+              item_id: 21212
+              description: Kripton
+              amount: 5
+        payment_methods:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: number
+                description: Payment method id.
+                example: 2
+              options:
+                $ref: '#/components/schemas/PaymentCreditCardView'
+        feeds:
+          type: object
+          properties: {}
+          description: Detalle comision
+          example:
+            earningRetetion: 0
+            proporcionalBankrate: 0
+            apCommissionTotal: 1
+            arancel: 0.02
+            ivaBankRateTotal: 0
+            ivaBankRate: 0.21
+            ivaArancelTotal: 0.42
+            ivaAPCommissionTotal: 0.21
+            ivaAPCommission: 0.21
+            proporcionalBankrateTotal: 0
+            earningRetetionTotal: 0
+            arancelTotal: 2
+            apCommission: 0.01
+            totalAmount: 96.37
+            cft: 0
+            ivaArancel: 0.21
+            IIBBRetention: 0
+            IIBBRetentionTotal: 0
+    PaymentOrderReducedView:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: uuid
+          example: 6a0e9a0a-c926-4805-8ae1-8242918a4c42
+        code:
+          type: string
+          description: code
+          example: PO-19-000005
+        date:
+          type: string
+          example: '2019-04-16T17:20:08.767775Z'
+        beneficiary:
+          $ref: '#/components/schemas/Beneficiary'
+        payer_email:
+          type: string
+          description: Payer email
+          example: agropago.test02@gmail.com
+        payer:
+          $ref: '#/components/schemas/Payer'
+        amount:
+          type: number
+          description: Total
+          example: 100.0
+        amount_to_transfer:
+          type: number
+          description: Total a tranferir
+          example: 96.37
+        status:
+          $ref: '#/components/schemas/Status'
+        description:
+          type: string
+          description: Descripcion
+          example: Venta de quimicos
+        invoice_number:
+          type: string
+          description: Numero de Factura
+          example: 234-234213
+        rel_type:
+          type: string
+          example: beneficiary
+        payment_method_required:
+          type: object
+          properties:
+            id:
+              type: number
+              description: Payment method id (Define el metdio de pago seleccionado).
+              example: 2
+            options:
+              type: object
+              properties:
+                term:
+                  type: number
+                  description: Plazo de pago.
+                  example: 120
+                installments:
+                  type: number
+                  description: Cantidad de Cuotas.
+                  example: 1
+        items:
+          type: array
+          items:
+            type: object
+            example:
+              item_id: 21212
+              description: Kripton
+              amount: 5
+        feeds:
+          type: object
+          properties: {}
+          description: Detalle comision
+          example:
+            earningRetetion: 0
+            proporcionalBankrate: 0
+            apCommissionTotal: 1
+            arancel: 0.02
+            ivaBankRateTotal: 0
+            ivaBankRate: 0.21
+            ivaArancelTotal: 0.42
+            ivaAPCommissionTotal: 0.21
+            ivaAPCommission: 0.21
+            proporcionalBankrateTotal: 0
+            earningRetetionTotal: 0
+            arancelTotal: 2
+            apCommission: 0.01
+            totalAmount: 96.37
+            cft: 0
+            ivaArancel: 0.21
+            IIBBRetention: 0
+            IIBBRetentionTotal: 0            
+    PaymentCreate:
+      type: object
+      properties:
+        payment_order:
+          $ref: '#/components/schemas/PaymentOrderReducedCreate'
+        amount:
+          type: number
+          description: Total
+          example: 100.00
+        payment_methods:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: number
+                description: Payment method id.
+                example: 2
+              options:
+                $ref: '#/components/schemas/PaymentCreditCard'
+    PaymentReducedCreate:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Total
+          example: 100.00
+        payment_methods:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: number
+                description: Payment method id.
+                example: 2
+              options:
+                $ref: '#/components/schemas/PaymentCreditCard'
+    PaymentCreditCard:
+      type: object
+      description: Opciones del metodo de pago seleccionado.
+      required:
+      - token
+      - amount
+      - term
+      - installments
+      - token_agro
+      - token_type
+      - days_agreement
+      - card_info
+      properties:
+        token:
+          type: string
+          description: Token obtenido usando la libreria de javascrip desde la aplicacion web.
+          example: 9b5c42ea-9680-4f11-acd9-caa88ccfcb7e
+        amount:
+          type: integer
+          description: SubTotal pagado con el metodo.
+          example: 100
+        term:
+          type: number
+          description: Plazo de pago.
+          example: 120
+        installments:
+          type: number
+          description: Cantidad de Cuotas.
+          example: 1
+        token_agro:
+          type: string
+          description: Token agro.
+          example: '123123'
+        token_type:
+          type: string
+          example: 'T'
+        card_info:
+          type: object
+          description: Datos de la tarjeta.
+          example:
+          - name: User Apidoc
+            bin: 448459
+            expiration_year: 25
+            expiration_month: 1
+            last_four_digits: 3090
+          required:
+          - name
+          - bin
+          - last_four_digits
+          - expiration_month
+          - expiration_year
+          properties:
+            name:
+              type: string
+              description: Nombre del dueno de la tarjeta.
+              example: Juan Perez
+            bin:
+              type: integer
+              description: Primerod seis digitos de la tarjeta.
+              example: 448459
+            last_four_digits:
+              type: integer
+              description: Cuatro ultimos digitos de la tarjeta.
+              example: 3090
+            expiration_month:
+              type: integer
+              description: Mes de expiracion de la tarjeta.
+              example: 01
+            expiration_year:
+              type: integer
+              description: Anio de expiracion de la tarjeta.
+              example: 25
+    PaymentCreditCardView:
+      type: object
+      description: Opciones del metodo de pago seleccionado.
+      required:
+      - token
+      - payment_method_id
+      - amount
+      - installments
+      - token_agro
+      - token_type
+      - days_agreement
+      - card_info
+      properties:
+        term:
+          type: number
+          description: Plazo de pago.
+          example: 120
+        installments:
+          type: number
+          description: Cantidad de Cuotas.
+          example: 1
+        status:
+          $ref: '#/components/schemas/Status'
+        token:
+          type: string
+          description: Token obtenido usando la libreria de javascrip desde la aplicacion web.
+          example: 9b5c42ea-9680-4f11-acd9-caa88ccfcb7e
+        amount:
+          type: integer
+          description: SubTotal pagado con el metodo.
+          example: 100
+        token_type:
+          type: string
+          example: 'T'
+        card_info:
+          type: object
+          description: Datos de la tarjeta.
+          example:
+          - name: User Apidoc
+            bin: 448459
+            expiration_year: 25
+            expiration_month: 1
+            last_four_digits: 3090
+          required:
+          - name
+          - bin
+          - last_four_digits
+          - expiration_month
+          - expiration_year
+          properties:
+            name:
+              type: string
+              description: Nombre del dueno de la tarjeta.
+              example: Juan Perez
+            bin:
+              type: integer
+              description: Primerod seis digitos de la tarjeta.
+              example: 448459
+            last_four_digits:
+              type: integer
+              description: Cuatro ultimos digitos de la tarjeta.
+              example: 3090
+            expiration_month:
+              type: integer
+              description: Mes de expiracion de la tarjeta.
+              example: 01
+            expiration_year:
+              type: integer
+              description: Anio de expiracion de la tarjeta.
+              example: 25
+    PaymentView: 
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Total
+          example: 100.00
+        payment_methods:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: number
+                description: Payment method id.
+                example: 2
+              options:
+                $ref: '#/components/schemas/PaymentCreditCardView'
+        payment_order:
+          $ref: '#/components/schemas/PaymentOrderReducedView'
 
-              
-externalDocs:
-  description: "Find out more about Swagger"
-  url: "http://swagger.io"
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
