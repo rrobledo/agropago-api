@@ -3,12 +3,10 @@ info:
   title: Agropago Rest API
   description: |
     Este documento describe algunos casos de usos y en detalle las apis publicadas por el servicio de agropago.
-
     # Integracion con servicios e-commerce
     ## Paso 1) Registrar un nuevo usuario al sistema. 
     
     Ingrese al portal de agropago y registrarse como un nuevo usuario del sistema https://www.agropago.com/#/register
-
     **Nota:** Despues de registrar el usuario y para continuar con este processo, Ud necesita generar un token para la cual exiten las siguientes alternativas:
       1. Invocar la api de login. (Este token tiene un tiempo de expiracion)
     ```
@@ -25,81 +23,155 @@ info:
     ## Paso 2) Listar los medios de pagos disponibles.
     
     Antes de registrar un cobro, Se sugiere listar todos los pagos disponibles y seleccionar uno de ellos. Tenga en cuenta que para realizar un cobro se solicitara la identificacion del medio de pago.
-
     ```
     POST /payment_methods/ HTTP/1.1
     Host: www.agropago.com
     Authorization: Bearer <ACCESS_TOKEN>
     {
-      "count": 1,
-      "next": "",
-      "previous": "",
-      "result": [
-        {
-          "id": 1,
-          "name": "Bancor",
-          "assets": [
+        "pagination": {
+            "offset": 0,
+            "limit": 100,
+            "total": 2
+        },
+        "data": [
             {
-              "id": 1,
-              "logo": "../assets/images/banks/bancor.png",
-              "cc_logo": "../assets/images/banks/bancor_card.png"
-            }
-          ],
-          "payment_type": "credit_card",
-          "operation_fee": 0.02,
-          "options": [
+                "id": 1,
+                "bank_id": 8,
+                "name": "Bancor",
+                "assets": {
+                    "logo": "../assets/images/banks/bancor.png",
+                    "cc_logo": "../assets/images/banks/bancor_card.png"
+                },
+                "payment_type": "CREDIT_CARD",
+                "operation_rate": 0.02,
+                "options": {
+                    "mask": 1234,
+                    "terms": [
+                        {
+                            "id": 0,
+                            "rate": 0,
+                            "term": 30,
+                            "rate_label": "Contado",
+                            "term_labels": "Contado"
+                        },
+                        {
+                            "id": 1,
+                            "rate": 0.5,
+                            "term": 60,
+                            "rate_label": "50% Tasa TNA.",
+                            "term_labels": "Hasta 60"
+                        },
+                        {
+                            "id": 2,
+                            "rate": 0.5,
+                            "term": 90,
+                            "rate_label": "50% Tasa TNA.",
+                            "term_labels": "Hasta 90"
+                        },
+                        {
+                            "id": 3,
+                            "rate": 0.5,
+                            "term": 120,
+                            "rate_label": "50% Tasa TNA.",
+                            "term_labels": "Hasta 120"
+                        }
+                    ],
+                    "card_type": "agro",
+                    "installments": [
+                        {
+                            "id": 0,
+                            "rate": 0,
+                            "label": "Contado",
+                            "rate_label": "Contado",
+                            "installment": 1
+                        },
+                        {
+                            "id": 1,
+                            "rate": 0.0245,
+                            "label": "Ahora 3",
+                            "rate_label": "2,45% TNA",
+                            "installment": 3
+                        },
+                        {
+                            "id": 2,
+                            "rate": 0.0476,
+                            "label": "Ahora 6",
+                            "rate_label": "4,76% TNA",
+                            "installment": 6
+                        },
+                        {
+                            "id": 3,
+                            "rate": 0.0912,
+                            "label": "Ahora 12",
+                            "rate_label": "9,12% TNA",
+                            "installment": 12
+                        }
+                    ],
+                    "payment_method_id": 84
+                }
+            },
             {
-              "mask": 1234,
-              "payment_method_id": 84,
-              "card_type": "agro",
-              "terms": [
-                {
-                  "term": 0,
-                  "term_labels": "Contado",
-                  "fee": 0,
-                  "fee_label": "Contado"
+                "id": 2,
+                "bank_id": 2,
+                "name": "Galicia Rural",
+                "assets": {
+                    "logo": "../assets/images/banks/galicia.png",
+                    "cc_logo": "../assets/images/banks/galicia_card.png"
                 },
-                {
-                  "term": 60,
-                  "term_labels": "Hasta 60",
-                  "fee": 0.5,
-                  "fee_label": "50% Tasa TNA."
-                },
-                {
-                  "term": 120,
-                  "term_labels": "Hasta 120",
-                  "fee": 0.7,
-                  "fee_label": "70% Tasa TNA."
+                "payment_type": "CREDIT_CARD",
+                "operation_rate": 0.02,
+                "options": {
+                    "mask": 4765,
+                    "terms": [
+                        {
+                            "id": 0,
+                            "rate": 0,
+                            "term": 30,
+                            "rate_label": "Contado",
+                            "term_labels": "Contado"
+                        },
+                        {
+                            "id": 1,
+                            "rate": 0.82,
+                            "term": 60,
+                            "rate_label": "82% Tasa TNA.",
+                            "term_labels": "Hasta 60"
+                        },
+                        {
+                            "id": 2,
+                            "rate": 0.82,
+                            "term": 150,
+                            "rate_label": "82% Tasa TNA.",
+                            "term_labels": "Hasta 150"
+                        },
+                        {
+                            "id": 3,
+                            "rate": 0.82,
+                            "term": 180,
+                            "rate_label": "82% Tasa TNA.",
+                            "term_labels": "Hasta 180"
+                        }
+                    ],
+                    "card_type": "agro",
+                    "installments": [
+                        {
+                            "id": 0,
+                            "rate": 0,
+                            "label": "Contado",
+                            "rate_label": "Contado",
+                            "installment": 1
+                        }
+                    ],
+                    "payment_method_id": 98
                 }
-              ],
-              "installments": [
-                {
-                  "installment": 0,
-                  "label": "Contado",
-                  "fee": 0,
-                  "fee_label": "Contado"
-                },
-                {
-                  "installment": 3,
-                  "label": "3 Cuotas",
-                  "fee": 0.5,
-                  "fee_label": "50% Tasa TNA."
-                },
-                {
-                  "installment": 6,
-                  "label": "6 Cuotas",
-                  "fee": 0.7,
-                  "fee_label": "70% Tasa TNA."
-                }
-              ]
             }
-          ]
+        ],
+        "links": {
+            "next": "",
+            "prev": ""
         }
-      ]
-    }    
-
+    }
     ```
-
       
     **Nota:** Ud. puede usar esta informacion para generar un mejor experiencia del usuario. Este metodo retorna la siguiente informacion.
     
@@ -109,7 +181,6 @@ info:
           - Plazos y costo por cada uno de ello. (esto puede ser usado para ajustar el precio a cobrar)
           - Cuotas y costo por cada una. (esto puede ser usado para ajustar el precio a cobrar)
       
-
     ## Paso 3) Cobro
     
       Usa la api payment para solicitar un pago. (Esta api requiere la siguiente informacion)
@@ -144,8 +215,8 @@ info:
           "options": {
             "token": "9b5c42ea-9680-4f11-acd9-caa88ccfcb7e",
             "amount": 100,
-            "term": 120,
-            "installments": 1,
+            "term_id": 1,
+            "installment_id": 0,
             "token_agro": "123123",
             "token_type": "T",
             "card_info": [
@@ -162,7 +233,6 @@ info:
       ]
     }
     ```
-
     **Nota:** En el ejemplo anterior se realizo un cobro con tarjeta de credito. Para lo cual es importante tener en cuenta los siguientes datos.
     
       1. **payer_email**: El email del usuario al cual se le va a realizar el cobro. Es importante ya que este email es usado para enviarle la informacion del pago.
@@ -177,35 +247,32 @@ info:
        - Hay dos opciones para consultar los cobros realizados
          - Usando la api rest, consultando por transacciones
     	 - Ingresando a la pagina de agropago y viendo las transacciones.
-	 
 
-  termsOfService: http://www.agropago.com/terms/
+  termsOfService: 'http://www.agropago.com/terms/'
   contact:
     email: support@agropago.com
   version: 1.0.0
 servers:
-- url: https://api.sandbox.agropago.com/v1
-- url: http://apisandbox.agropago.com/v1
-
+  - url: 'https://api.sandbox.agropago.com/v1'
+  - url: 'http://apisandbox.agropago.com/v1'
 tags:
-- name: Authorization
-  description: Administracion de Authenticacion y claves de usuarios
-- name: Users
-  description: Administracion de Usuarios 
-- name: Accounts
-  description: Administracion de Cuentas del usuario  
-- name: Payment Methods
-  description: Metodos de pagos disponibles 
-- name: Orders
-  description: Solicitudes de Pagos y Dinero  
-- name: Transactions
-  description: Payments and balance
-
+  - name: Authorization
+    description: Administracion de Authenticacion y claves de usuarios
+  - name: Users
+    description: Administracion de Usuarios
+  - name: Accounts
+    description: Administracion de Cuentas del usuario
+  - name: Payment Methods
+    description: Metodos de pagos disponibles
+  - name: Orders
+    description: Solicitudes de Pagos y Dinero
+  - name: Transactions
+    description: Payments and balance
 paths:
   /login:
     post:
       tags:
-      - Authorization
+        - Authorization
       summary: User Login
       requestBody:
         description: Activation
@@ -213,9 +280,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserLogin'
+            examples:
+              example:
+                value: 
+                  auth_token: 66ffd7f7c593afeb27e353769ffeac682bde3167
         required: true
       responses:
-        200:
+        '200':
           description: successful operation
           content:
             application/json:
@@ -225,44 +296,62 @@ paths:
                   auth_token:
                     type: string
                     example: 66ffd7f7c593afeb27e353769ffeac682bde3167
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
+      description: User Login
+      operationId: asdfasd
   /logout:
     post:
       tags:
-      - Authorization
+        - Authorization
       summary: Logout
+      operationId: '/logout'
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
-          
+      description: User Logout
   /users:
     post:
       tags:
-      - Users
+        - Users
       summary: Registrar un nuevo usuario
+      description: Registrar un nuevo usuario
       requestBody:
         description: User
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/User'
+            examples:
+              example:
+                value:
+                  first_name: Juan
+                  last_name: Perez
+                  birthdate: 01/08/1978
+                  dni: '22222222'
+                  legal_name: Juan Perez
+                  cuit: '20222222223'
+                  phone: 0351-4895477
+                  email: juanperez@gmail.com
+                  confirm_email: juanperez@gmail.com
+                  password: "**********"
+                  terms_accepted: true
         required: true
       responses:
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
   /users/activate:
     post:
       tags:
-      - Users
+        - Users
       summary: Activar un usuario previamente registrado
       description: Para activar un usuario se requiere un token recibido por email despues que el usuario fue registrado.
       requestBody:
@@ -273,32 +362,32 @@ paths:
               $ref: '#/components/schemas/Activation'
         required: true
       responses:
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
   /users/profile:
     get:
       tags:
-      - Users
+        - Users
       summary: Obtener la informacion del usuario
       description: Retorna la informacion del usuario conectado
       responses:
-        200:
+        '200':
           description: No Content
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserInfo'
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
+        - basicAuth: []
   /users/password:
     put:
       tags:
-      - Users
+        - Users
       summary: Cambiar password
       requestBody:
         content:
@@ -317,17 +406,17 @@ paths:
                   example: '***********************'
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
   /users/password/reset:
     post:
       tags:
-      - Users
+        - Users
       summary: Solicitar blanqueo de password
       description: Esta accion enviara un mail conteniendo un token and uid con el cual se puede cambiar el password.
       requestBody:
@@ -341,17 +430,17 @@ paths:
                   example: juanperez@gmail.com
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
   /users/password/confirm:
     post:
       tags:
-      - Users
+        - Users
       summary: Confirmar blanqueo de password
       description: Confirmar el blanqueo de password ingresando uno nuevo.
       requestBody:
@@ -374,17 +463,17 @@ paths:
                   example: '***********************'
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
   /users/email:
     put:
       tags:
-      - Users
+        - Users
       summary: Solicita el cambio de email para el usuario conectado.
       requestBody:
         content:
@@ -397,17 +486,17 @@ paths:
                   example: juanperez2@gmail.com
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
   /users/email/confirm:
     post:
       tags:
-      - Users
+        - Users
       summary: Confirma el cambio de email.
       description: Confirma el cambio de email.
       requestBody:
@@ -424,39 +513,37 @@ paths:
                   example: 9809ads8908ds6jj8u2389
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
-
   /banks:
     get:
       tags:
-      - Accounts
+        - Accounts
       summary: Retorna la lista de bancos disponibles
       responses:
-        200:
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
                 type: array
-                description: ""
+                description: ''
                 items:
                   $ref: '#/components/schemas/Bank'
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
-      
+        - basicAuth: []
   /banks/accounts:
     post:
       tags:
-      - Accounts
+        - Accounts
       summary: Registra una nueva cuenta bancaria
       requestBody:
         content:
@@ -465,22 +552,22 @@ paths:
               $ref: '#/components/schemas/BankAccountCreate'
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
+        - basicAuth: []
       x-codegen-request-body-name: body
     get:
       tags:
-      - Accounts
+        - Accounts
       summary: Obtiene la lista de cuentas bancarias
       responses:
-        200:
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
@@ -494,44 +581,43 @@ paths:
                     type: string
                   result:
                     type: array
-                    description: ""
+                    description: ''
                     items:
                       $ref: '#/components/schemas/BankAccountView'
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
-  /banks/accounts/{accountId}:
+        - basicAuth: []
+  '/banks/accounts/{accountId}':
     delete:
       tags:
-      - Accounts
+        - Accounts
       summary: Elimina una cuenta bancaria
       parameters:
-      - name: accountId
-        in: path
-        description: Account ID
-        required: true
-        schema:
-          type: integer
+        - name: accountId
+          in: path
+          description: Account ID
+          required: true
+          schema:
+            type: integer
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
-      
+        - basicAuth: []
   /payment_methods:
     get:
       tags:
-      - Payment Methods
+        - Payment Methods
       summary: Retorna la lista de todos los metodos de pagos disponibles
       responses:
-        200:
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
@@ -545,43 +631,167 @@ paths:
                     type: string
                   result:
                     type: array
-                    description: ""
+                    description: ''
                     items:
                       $ref: '#/components/schemas/PaymentMethod'
-        405:
+              examples:
+                example:
+                  value:
+					pagination:
+					  offset: 0
+					  limit: 100
+					  total: 2
+					data:
+					- id: 1
+					  bank_id: 8
+					  name: Bancor
+					  assets:
+						logo: "../assets/images/banks/bancor.png"
+						cc_logo: "../assets/images/banks/bancor_card.png"
+					  payment_type: CREDIT_CARD
+					  operation_rate: 0.02
+					  options:
+						mask: 1234
+						terms:
+						- id: 0
+						  rate: 0
+						  term: 30
+						  rate_label: Contado
+						  term_labels: Contado
+						- id: 1
+						  rate: 0.5
+						  term: 60
+						  rate_label: 50% Tasa TNA.
+						  term_labels: Hasta 60
+						- id: 2
+						  rate: 0.5
+						  term: 90
+						  rate_label: 50% Tasa TNA.
+						  term_labels: Hasta 90
+						- id: 3
+						  rate: 0.5
+						  term: 120
+						  rate_label: 50% Tasa TNA.
+						  term_labels: Hasta 120
+						card_type: agro
+						installments:
+						- id: 0
+						  rate: 0
+						  label: Contado
+						  rate_label: Contado
+						  installment: 1
+						- id: 1
+						  rate: 0.0245
+						  label: Ahora 3
+						  rate_label: 2,45% TNA
+						  installment: 3
+						- id: 2
+						  rate: 0.0476
+						  label: Ahora 6
+						  rate_label: 4,76% TNA
+						  installment: 6
+						- id: 3
+						  rate: 0.0912
+						  label: Ahora 12
+						  rate_label: 9,12% TNA
+						  installment: 12
+						payment_method_id: 84
+					- id: 2
+					  bank_id: 2
+					  name: Galicia Rural
+					  assets:
+						logo: "../assets/images/banks/galicia.png"
+						cc_logo: "../assets/images/banks/galicia_card.png"
+					  payment_type: CREDIT_CARD
+					  operation_rate: 0.02
+					  options:
+						mask: 4765
+						terms:
+						- id: 0
+						  rate: 0
+						  term: 30
+						  rate_label: Contado
+						  term_labels: Contado
+						- id: 1
+						  rate: 0.82
+						  term: 60
+						  rate_label: 82% Tasa TNA.
+						  term_labels: Hasta 60
+						- id: 2
+						  rate: 0.82
+						  term: 150
+						  rate_label: 82% Tasa TNA.
+						  term_labels: Hasta 150
+						- id: 3
+						  rate: 0.82
+						  term: 180
+						  rate_label: 82% Tasa TNA.
+						  term_labels: Hasta 180
+						card_type: agro
+						installments:
+						- id: 0
+						  rate: 0
+						  label: Contado
+						  rate_label: Contado
+						  installment: 1
+						payment_method_id: 98
+					links:
+					  next: ''
+					  prev: ''
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
-      
+        - basicAuth: []
   /orders/payment_orders:
     post:
       tags:
-      - Orders
+        - Orders
       summary: Crea una order de pago
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/PaymentOrderCreate'
+		  examples:
+			example:
+			  value:
+				payer_email: agropago.test02@gmail.com
+				amount: 1000
+				description: Venta de Quimicos
+				reference_number: '122132'
+				invoice_number: 234-234213
+				accepted_payment_methods:
+				- id: 1
+				  options:
+					term_id: 1
+					installment_id: 0
+				- id: 2
+				  options:
+					term_id: 1
+					installment_id: 0
+				items:
+				- item_id: 21212
+				  description: Kripton
+				  amount: 5
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
+        - basicAuth: []
       x-codegen-request-body-name: body
     get:
       tags:
-      - Orders
+        - Orders
       summary: Lista las ordenes de pago realizadas y recibidas
       responses:
-        200:
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
@@ -595,17 +805,17 @@ paths:
                     type: string
                   result:
                     type: array
-                    description: ""
+                    description: ''
                     items:
                       $ref: '#/components/schemas/PaymentOrderView'
       security:
-      - basicAuth: []
-  /orders/payment_orders/{po_id}/cancel:
+        - basicAuth: []
+  '/orders/payment_orders/{po_id}/cancel':
     post:
       tags:
-      - Orders
+        - Orders
       summary: Cancelar una orden de pago
-      description: Cancelar una orden de pago, Solo es posible cancelarla si no tiene ningun pago asociado.
+      description: 'Cancelar una orden de pago, Solo es posible cancelarla si no tiene ningun pago asociado.'
       parameters:
         - name: po_id
           in: path
@@ -614,18 +824,17 @@ paths:
           schema:
             type: integer
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
-
-  /transactions/payment_orders/{po_id}/payments:
+  '/transactions/payment_orders/{po_id}/payments':
     post:
       tags:
-      - Transactions
+        - Transactions
       summary: Pago de una orden de pago realizada previamente.
       parameters:
         - name: po_id
@@ -641,19 +850,19 @@ paths:
               $ref: '#/components/schemas/PaymentReducedCreate'
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       x-codegen-request-body-name: body
       security:
-      - basicAuth: []
+        - basicAuth: []
   /transactions/payments:
     post:
       tags:
-      - Transactions
+        - Transactions
       summary: Pago sin orden de pago previa
       requestBody:
         content:
@@ -662,22 +871,22 @@ paths:
               $ref: '#/components/schemas/PaymentCreate'
         required: true
       responses:
-        204:
+        '204':
           description: No Content
           content: {}
-        405:
+        '405':
           description: Invalid input
           content: {}
       security:
-      - basicAuth: []
+        - basicAuth: []
       x-codegen-request-body-name: body
     get:
       tags:
-      - Transactions
+        - Transactions
       summary: Lista los pagos realizados y solicitados
       responses:
-        200:
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
@@ -691,15 +900,15 @@ paths:
                     type: string
                   result:
                     type: array
-                    description: ""
+                    description: ''
                     items:
                       $ref: '#/components/schemas/PaymentView'
       security:
-      - basicAuth: []
-  /transactions/payments/{payment_id}:
+        - basicAuth: []
+  '/transactions/payments/{payment_id}':
     get:
       tags:
-      - Transactions
+        - Transactions
       summary: Lista los pagos realizados y solicitados
       parameters:
         - name: payment_id
@@ -709,16 +918,14 @@ paths:
           schema:
             type: integer
       responses:
-        200:
-          description: ""
+        '200':
+          description: ''
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaymentView'
       security:
-      - basicAuth: []
-
-
+        - basicAuth: []
 components:
   schemas:
     User:
@@ -739,7 +946,7 @@ components:
         dni:
           type: string
           description: Dni
-          example: "22222222"
+          example: '22222222'
         legal_name:
           type: string
           description: Nombre legal
@@ -747,7 +954,7 @@ components:
         cuit:
           type: string
           description: Cuit
-          example: "20222222223"
+          example: '20222222223'
         phone:
           type: string
           description: Teléfono
@@ -786,7 +993,7 @@ components:
         dni:
           type: string
           description: Dni
-          example: "22222222"
+          example: '22222222'
         legal_name:
           type: string
           description: Nombre legal
@@ -794,7 +1001,7 @@ components:
         cuit:
           type: string
           description: Cuit
-          example: "20222222223"
+          example: '20222222223'
         phone:
           type: string
           description: Teléfono
@@ -802,11 +1009,11 @@ components:
         balance:
           type: number
           description: Balance
-          example: 3000.0
+          example: 3000
         full_balance:
           type: number
           description: Full Balance
-          example: 3000.0
+          example: 3000
     Beneficiary:
       type: object
       properties:
@@ -849,7 +1056,7 @@ components:
         uid:
           type: string
           description: UID
-          example: "834812341324123"
+          example: '834812341324123'
         token:
           type: string
           description: Token
@@ -859,11 +1066,11 @@ components:
       properties:
         email:
           type: string
-          description: ""
+          description: ''
           example: juanperez@gmail.com
         password:
           type: string
-          description: ""
+          description: ''
           example: '******************'
     Bank:
       type: object
@@ -871,7 +1078,7 @@ components:
         id:
           type: number
           description: Id del Banco
-          example: 16.0
+          example: 16
         name:
           type: string
           description: Nombre del Banco
@@ -884,11 +1091,12 @@ components:
       type: object
       description: Metodo de pago.
       required:
-      - id
-      - name
-      - payment_type
-      - rate_fee
-      - assets
+        - id
+        - name
+        - payment_type
+        - operation_rate
+        - operation_rate
+        - assets
       additionalProperties: false
       properties:
         id:
@@ -906,13 +1114,13 @@ components:
           description: Imagenes/Iconos del metodo de pago.
           default: {}
           example:
-          - id: 1
-            logo: "../assets/images/banks/bancor.png"
-            cc_logo: "../assets/images/banks/bancor_card.png"
+            - id: 1
+              logo: ../assets/images/banks/bancor.png
+              cc_logo: ../assets/images/banks/bancor_card.png
           required:
-          - id
-          - logo
-          - cc_logo
+            - id
+            - logo
+            - cc_logo
           properties:
             id:
               type: integer
@@ -923,19 +1131,19 @@ components:
               type: string
               description: Imagen del metodo de pago.
               default: ''
-              example: "../assets/images/banks/bancor.png"
+              example: ../assets/images/banks/bancor.png
             cc_logo:
               type: string
               title: The Cc_logo Schema
               description: Icono del metodo de pago.
               default: ''
-              example: "../assets/images/banks/bancor_card.png"
+              example: ../assets/images/banks/bancor_card.png
         payment_type:
           type: string
           description: Tipo de pago.
           default: ''
           example: credit_card
-        operation_fee:
+        operation_rate:
           type: number
           description: Comision.
           default: 0
@@ -945,42 +1153,42 @@ components:
           description: Opciones del metodo de pago (Los atributos dependen del metodo de pago).
           default: {}
           example:
-          - mask: 1234
-            payment_method_id: 84
-            card_type: agro
-            terms:
-            - term: 0
-              term_labels: Contado
-              fee: 0
-              fee_label: Contado
-            - term: 60
-              term_labels: Hasta 60
-              fee: 0.5
-              fee_label: 50% Tasa TNA.
-            - term: 120
-              term_labels: Hasta 120
-              fee: 0.7
-              fee_label: 70% Tasa TNA.
-            installments:
-            - installment: 0
-              label: Contado
-              fee: 0
-              fee_label: Contado
-            - installment: 3
-              label: 3 Cuotas
-              fee: 0.5
-              fee_label: 50% Tasa TNA.
-            - installment: 6
-              label: 6 Cuotas
-              fee: 0.7
-              fee_label: 70% Tasa TNA.
+            - mask: 1234
+              payment_method_id: 84
+              card_type: agro
+              terms:
+                - term: 0
+                  term_labels: Contado
+                  fee: 0
+                  fee_label: Contado
+                - term: 60
+                  term_labels: Hasta 60
+                  fee: 0.5
+                  fee_label: '50% Tasa TNA.'
+                - term: 120
+                  term_labels: Hasta 120
+                  fee: 0.7
+                  fee_label: '70% Tasa TNA.'
+              installments:
+                - installment: 0
+                  label: Contado
+                  fee: 0
+                  fee_label: Contado
+                - installment: 3
+                  label: 3 Cuotas
+                  fee: 0.5
+                  fee_label: '50% Tasa TNA.'
+                - installment: 6
+                  label: 6 Cuotas
+                  fee: 0.7
+                  fee_label: '70% Tasa TNA.'
     Status:
       type: object
       properties:
         id:
           type: number
           description: Id Status
-          example: 2.0
+          example: 2
         name:
           type: string
           description: Status Description
@@ -996,7 +1204,7 @@ components:
         cbu:
           type: string
           description: CBU
-          example: "0170231820000000010500"
+          example: 170231820000000000000
         alias:
           type: string
           description: Alias
@@ -1009,11 +1217,11 @@ components:
         account_number:
           type: string
           description: Cuenta Bancaria
-          example: "0010500"
+          example: '0010500'
         cbu:
           type: string
           description: CBU
-          example: "0170231820000000010500"
+          example: 170231820000000000000
         alias:
           type: string
           description: Alias
@@ -1025,7 +1233,7 @@ components:
         when_valid_account:
           type: string
           description: fecha validacion
-          example: 2019-04-04T09:20:55.622478Z
+          example: '2019-04-04T09:20:55.622478Z'
     PaymentOrderCreate:
       type: object
       properties:
@@ -1036,7 +1244,7 @@ components:
         amount:
           type: number
           description: Total
-          example: 100.00
+          example: 100
         description:
           type: string
           description: Descripcion
@@ -1045,24 +1253,26 @@ components:
           type: string
           description: Numero de Factura
           example: 234-234213
-        payment_method_required:
-          type: object
-          properties:
-            id:
-              type: number
-              description: Payment method id (Define el metdio de pago seleccionado).
-              example: 2
-            options:
-              type: object
-              properties:
-                term:
-                  type: number
-                  description: Plazo de pago.
-                  example: 120
-                installments:
-                  type: number
-                  description: Cantidad de Cuotas.
-                  example: 1
+        accepted_payment_methods:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: number
+                description: Payment method id (Define el metdio de pago seleccionado).
+                example: 2
+              options:
+                type: object
+                properties:
+                  term:
+                    type: number
+                    description: Plazo de pago.
+                    example: 120
+                  installments:
+                    type: number
+                    description: Cantidad de Cuotas.
+                    example: 1
         items:
           type: array
           items:
@@ -1081,7 +1291,7 @@ components:
         amount:
           type: number
           description: Total
-          example: 100.00
+          example: 100
         description:
           type: string
           description: Descripcion
@@ -1123,7 +1333,7 @@ components:
         amount:
           type: number
           description: Total
-          example: 100.0
+          example: 100
         amount_to_transfer:
           type: number
           description: Total a tranferir
@@ -1178,7 +1388,7 @@ components:
                 example: 2
               options:
                 $ref: '#/components/schemas/PaymentCreditCardView'
-        feeds:
+        fees:
           type: object
           properties: {}
           description: Detalle comision
@@ -1226,7 +1436,7 @@ components:
         amount:
           type: number
           description: Total
-          example: 100.0
+          example: 100
         amount_to_transfer:
           type: number
           description: Total a tranferir
@@ -1270,7 +1480,7 @@ components:
               item_id: 21212
               description: Kripton
               amount: 5
-        feeds:
+        fees:
           type: object
           properties: {}
           description: Detalle comision
@@ -1292,7 +1502,7 @@ components:
             cft: 0
             ivaArancel: 0.21
             IIBBRetention: 0
-            IIBBRetentionTotal: 0            
+            IIBBRetentionTotal: 0
     PaymentCreate:
       type: object
       properties:
@@ -1301,7 +1511,7 @@ components:
         amount:
           type: number
           description: Total
-          example: 100.00
+          example: 100
         payment_methods:
           type: array
           items:
@@ -1319,7 +1529,7 @@ components:
         amount:
           type: number
           description: Total
-          example: 100.00
+          example: 100
         payment_methods:
           type: array
           items:
@@ -1335,14 +1545,14 @@ components:
       type: object
       description: Opciones del metodo de pago seleccionado.
       required:
-      - token
-      - amount
-      - term
-      - installments
-      - token_agro
-      - token_type
-      - days_agreement
-      - card_info
+        - token
+        - amount
+        - term
+        - installments
+        - token_agro
+        - token_type
+        - days_agreement
+        - card_info
       properties:
         token:
           type: string
@@ -1366,22 +1576,22 @@ components:
           example: '123123'
         token_type:
           type: string
-          example: 'T'
+          example: T
         card_info:
           type: object
           description: Datos de la tarjeta.
           example:
-          - name: User Apidoc
-            bin: 448459
-            expiration_year: 25
-            expiration_month: 1
-            last_four_digits: 3090
+            - name: User Apidoc
+              bin: 448459
+              expiration_year: 25
+              expiration_month: 1
+              last_four_digits: 3090
           required:
-          - name
-          - bin
-          - last_four_digits
-          - expiration_month
-          - expiration_year
+            - name
+            - bin
+            - last_four_digits
+            - expiration_month
+            - expiration_year
           properties:
             name:
               type: string
@@ -1398,7 +1608,7 @@ components:
             expiration_month:
               type: integer
               description: Mes de expiracion de la tarjeta.
-              example: 01
+              example: 1
             expiration_year:
               type: integer
               description: Anio de expiracion de la tarjeta.
@@ -1407,14 +1617,14 @@ components:
       type: object
       description: Opciones del metodo de pago seleccionado.
       required:
-      - token
-      - payment_method_id
-      - amount
-      - installments
-      - token_agro
-      - token_type
-      - days_agreement
-      - card_info
+        - token
+        - payment_method_id
+        - amount
+        - installments
+        - token_agro
+        - token_type
+        - days_agreement
+        - card_info
       properties:
         term:
           type: number
@@ -1436,22 +1646,22 @@ components:
           example: 100
         token_type:
           type: string
-          example: 'T'
+          example: T
         card_info:
           type: object
           description: Datos de la tarjeta.
           example:
-          - name: User Apidoc
-            bin: 448459
-            expiration_year: 25
-            expiration_month: 1
-            last_four_digits: 3090
+            - name: User Apidoc
+              bin: 448459
+              expiration_year: 25
+              expiration_month: 1
+              last_four_digits: 3090
           required:
-          - name
-          - bin
-          - last_four_digits
-          - expiration_month
-          - expiration_year
+            - name
+            - bin
+            - last_four_digits
+            - expiration_month
+            - expiration_year
           properties:
             name:
               type: string
@@ -1468,18 +1678,18 @@ components:
             expiration_month:
               type: integer
               description: Mes de expiracion de la tarjeta.
-              example: 01
+              example: 1
             expiration_year:
               type: integer
               description: Anio de expiracion de la tarjeta.
               example: 25
-    PaymentView: 
+    PaymentView:
       type: object
       properties:
         amount:
           type: number
           description: Total
-          example: 100.00
+          example: 100
         payment_methods:
           type: array
           items:
@@ -1493,7 +1703,6 @@ components:
                 $ref: '#/components/schemas/PaymentCreditCardView'
         payment_order:
           $ref: '#/components/schemas/PaymentOrderReducedView'
-
   securitySchemes:
     basicAuth:
       type: http
